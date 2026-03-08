@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>_secret_trad | Trading AI System</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        :root { --blue: #2962ff; --bg: #0b0e11; --card: #1e222d; --green: #00c853; --red: #d50000; }
+        body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; text-align: center; }
+        .hidden { display: none !important; }
+        .container { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 20px; box-sizing: border-box; }
+        .card { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid #363a45; width: 100%; max-width: 450px; margin: auto; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #363a45; background: #0b0e11; color: white; box-sizing: border-box; font-size: 16px; }
+        .btn { background: var(--blue); color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
+        
+        /* Admin Panel Jadvali */
+        .user-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #000; border-radius: 8px; overflow: hidden; }
+        .user-table th, .user-table td { padding: 12px; text-align: left; border-bottom: 1px solid #363a45; font-size: 14px; }
+        .user-table th { background: var(--blue); }
+        .pro-btn { background: var(--green); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px; }
+        .stop-btn { background: var(--red); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+        #adminStatus { margin-bottom: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="loginPage" class="container">
+        <div class="card">
+            <h1 style="color: var(--blue);">_SECRET_TRAD</h1>
+            <input type="text" id="regName" placeholder="Ismingiz">
+            <input type="text" id="regInsta" placeholder="Instagram nick">
+            <input type="text" id="adminCheck" placeholder="Maxsus kod (admin uchun)">
+            <button class="btn" onclick="handleLogin()">KIRISH</button>
+        </div>
+    </div>
+
+    <div id="adminPage" class="container hidden">
+        <div class="card" style="max-width: 800px;">
+            <h2>Foydalanuvchilar Boshqaruvi</h2>
+            <div id="adminStatus" style="color: var(--red);">Baza ulanmagan ❌</div>
+            <div style="overflow-x: auto;">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>Ism</th>
+                            <th>Instagram</th>
+                            <th>Status</th>
+                            <th>Amal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody"></tbody>
+                </table>
+            </div>
+            <button class="btn" style="background:#444; margin-top:20px;" onclick="location.reload()">Yopish</button>
+        </div>
+    </div>
+
+    <div id="mainMenu" class="container hidden">
+        <div class="card">
+            <h2>Xush kelibsiz!</h2>
+            <p>Siz muvaffaqiyatli kirdingiz. Admin ruxsatini kuting.</p>
+            <button class="btn" onclick="location.reload()">Chiqish</button>
+        </div>
+    </div>
+
+    <script>
+        // FIREBASE SOZLAMALARI - BU YERGA O'ZINGIZNIKINI QO'YING!
+        const firebaseConfig = {
+            apiKey: "SIZNING_API_KEY",
+            databaseURL: "https://SIZNING_DATABASE_URL.firebaseio.com",
+            projectId: "SIZNING_PROJECT_ID",
+            appId: "SIZNING_APP_ID"
+        };
+
+        // Firebase-ni ishga tushirish
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            // Baza ulanishini tekshirish
+            db.ref(".info/connected").on("value", (snap) => {
+                if (snap.val() === true) {
+                    document.getElementById('adminStatus').innerHTML = "Baza ulandi ✅";
+                    document.getElementById('adminStatus').style.color = "var(--green)";
+                }
+            });
+        } catch (e) {
+            console.error("Firebase ulanishda xato:", e);
+        }
+
+        function handleLogin() {
+            const name = document.getElementById('regName').value;
+            const insta = document.getElementById('regInsta').value.replace('@', '').trim();
+            const adminCode = document.getElementById('adminCheck').value;
+
+            // 1. Admin kirishi
+            if (adminCode === "adminfibo007") {
+                showPage('adminPage');
+                renderAdminList();
+                return;
+            }
+
+            // 2. Oddiy foydalanuvchi kirishi
+            if (name && insta) {
+                if (db) {
+                    db.ref('users/' + insta).set({
+                        name: name,
+                        insta: insta,
+                        ai_enabled: false,
+                        joinedAt: new Date().toLocaleString()
+                    }).then(() => {
+                        showPage('mainMenu');
+                    }).catch(err => alert("Bazaga yozishda xato: " + err.message));
+                } else {
+                    alert("Xato: Baza sozlanmagan!");
+                }
+            } else {
+                alert("Ism va Instagramingizni kiriting!");
+            }
+        }
+
+        function renderAdminList() {
+            if (!db) return;
+            db.ref('users').on('value', (snapshot) => {
+                const users = snapshot.val();
+                const tbody = document.getElementById('adminTableBody');
+                tbody.innerHTML = "";
+                
+                if (users) {
+                    for (let key in users) {
+                        const user = users[key];
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${user.name}</td>
+                                <td>@${user.insta}</td>
+                                <td>${user.ai_enabled ? "PRO ✅" : "Oddiy ❌"}</td>
+                                <td>
+                                    <button class="pro-btn" onclick="updateUserStatus('${key}', true)">PRO</button>
+                                    <button class="stop-btn" onclick="updateUserStatus('${key}', false)">STOP</button>
+                                </td>
+                            </tr>`;
+                    }
+                } else {
+                    tbody.innerHTML = "<tr><td colspan='4'>Foydalanuvchilar topilmadi</td></tr>";
+                }
+            });
+        }
+
+        function updateUserStatus(nick, status) {
+            if (db) {
+                db.ref('users/' + nick).update({ ai_enabled: status });
+            }
+        }
+
+        function showPage(id) {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('adminPage').classList.add('hidden');
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById(id).classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
