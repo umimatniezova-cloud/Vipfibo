@@ -3,62 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vipfibo | Trading AI System</title>
+    <title>Vipfibo | Premium System</title>
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
     <style>
-        body { font-family: sans-serif; background: #0f0f0f; color: white; margin: 0; text-align: center; }
-        .hidden { display: none; }
-        .card { background: #1a1a1a; padding: 25px; border-radius: 15px; max-width: 400px; margin: 50px auto; border: 1px solid #333; }
-        input { width: 80%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #222; color: white; }
-        .btn { padding: 12px 25px; background: #bb86fc; color: black; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .status-on { color: #4caf50; font-size: 14px; margin-bottom: 10px; }
+        * { box-sizing: border-box; transition: 0.4s; }
+        body { font-family: 'Segoe UI', sans-serif; background: #080808; color: white; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .hidden { display: none !important; }
+        .card { background: #121212; padding: 30px; border-radius: 20px; width: 100%; max-width: 450px; margin: 20px auto; border: 1px solid #222; box-shadow: 0 15px 35px rgba(0,0,0,0.8); text-align: center; }
         
-        /* AI & Fibo Section */
-        .tool-box { background: #252525; padding: 15px; margin: 10px; border-radius: 10px; border-left: 4px solid #bb86fc; text-align: left; }
+        h2 { color: #bb86fc; margin-bottom: 20px; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #000; color: white; outline: none; }
+        input:focus { border-color: #bb86fc; }
+        
+        .btn { width: 100%; padding: 14px; background: #bb86fc; color: black; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 16px; }
+        .btn-insta { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: white; margin-bottom: 10px; }
+        
+        .status-indicator { font-size: 12px; margin-bottom: 10px; font-weight: bold; }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+
+        .locked-box { padding: 40px 20px; border: 2px dashed #333; border-radius: 15px; color: #666; margin-top: 20px; }
+        .tool-box { background: #1a1a1a; padding: 20px; margin: 15px 0; border-radius: 12px; border-left: 5px solid #bb86fc; text-align: left; }
     </style>
 </head>
 <body>
 
     <div id="loginPage" class="card">
-        <h2>Vipfibo Kirish</h2>
+        <div id="dbStatus" class="status-indicator error">Baza ulanmagan ❌</div>
+        <h2>VIPFIBO LOGIN</h2>
         <input type="text" id="userName" placeholder="Ismingiz">
-        <input type="text" id="userInsta" placeholder="Instagram foydalanuvchi nomi">
+        <input type="text" id="userInsta" placeholder="Instagram (@username)">
+        <input type="text" id="promoCode" placeholder="Promo-kod">
+        
+        <p style="font-size: 13px; color: #888;">Promo-kod olish uchun:</p>
+        <button class="btn btn-insta" onclick="openInstagram()">Instagram App (abdu_samad_trading)</button>
         <button class="btn" onclick="login()">Kirish</button>
+        
+        <p style="font-size: 10px; color: #333; margin-top: 20px;" onclick="openAdmin()">Admin</p>
     </div>
 
-    <div id="mainPage" class="hidden">
-        <div class="card">
-            <div class="status-on">Baza ulandi ✅</div>
-            <h3>Xush kelibsiz, <span id="displayUserName"></span>!</h3>
-            
-            <div class="tool-box">
-                <h4>🤖 AI Market Analysis</h4>
-                <p id="aiResult">Analiz yuklanmoqda...</p>
-            </div>
-
-            <div class="tool-box">
-                <h4>📐 Fibo Nastroyka (OTE)</h4>
-                <p>0.62 | 0.705 | 0.79</p>
-                <small>XAUUSD uchun optimal trade entry zonalari.</small>
-            </div>
-
-            <button class="btn" style="background:#555; color:white;" onclick="openAdmin()">Admin Panel (Faqat siz uchun)</button>
-        </div>
+    <div id="welcomePage" class="card hidden">
+        <h3 id="welcomeText">Xush kelibsiz!</h3>
+        <p style="color: #888;">Tizim tayyor.</p>
+        <button class="btn" onclick="goToTools()">Dashboardni ochish</button>
     </div>
 
-    <div id="adminPage" class="hidden">
-        <div class="card" style="max-width: 600px;">
-            <h3>Foydalanuvchilar Nazorati</h3>
-            <table id="userTable" style="width:100%; text-align:left;">
-                <thead><tr><th>Ism</th><th>Insta</th><th>Status</th></tr></thead>
-                <tbody></tbody>
-            </table>
-            <button class="btn" onclick="location.reload()">Orqaga</button>
+    <div id="toolsPage" class="card hidden">
+        <h3 style="color: #bb86fc;">Premium Panel</h3>
+        
+        <div id="lockedSection">
+            <div class="locked-box">
+                <span style="font-size: 50px;">🔒</span>
+                <p>Analiz va Fibo qulflangan.</p>
+                <small>Admin panelidan tasdiqlash kutilmoqda...</small>
+            </div>
         </div>
+
+        <div id="openSection" class="hidden">
+            <div class="tool-box">
+                <h4 style="color:#4caf50;">🤖 AI Market Analysis</h4>
+                <p>XAUUSD: OTE zonasi orqali buy kutilmoqda. Trend: Bullish.</p>
+            </div>
+            <div class="tool-box" style="border-color: #03dac6;">
+                <h4 style="color:#03dac6;">📐 Fibo Premium</h4>
+                <p style="font-weight: bold; letter-spacing: 2px;">0.62 | 0.705 | 0.79</p>
+            </div>
+        </div>
+
+        <button class="btn" style="background: #333; color: white;" onclick="location.reload()">Chiqish</button>
+    </div>
+
+    <div id="adminPage" class="card hidden" style="max-width: 600px;">
+        <h2>Admin Panel</h2>
+        <div id="userList" style="text-align: left;"></div>
+        <button class="btn" onclick="location.reload()">Orqaga</button>
     </div>
 
 <script>
+    // Skrinshotingizdagi aniq konfiglar
     const firebaseConfig = {
         apiKey: "AIzaSyAFGJtXKgL8a1AjYK1w9ft7hI4",
         authDomain: "vipfibo-cf608.firebaseapp.com",
@@ -69,44 +94,70 @@
         appId: "1:73178155867:web:1cfc3757d2d09668102462"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    // Firebase'ni ishga tushirish
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.database();
+    const statusDiv = document.getElementById('dbStatus');
+
+    // Ulanishni tekshirish
+    db.ref('.info/connected').on('value', (snap) => {
+        if (snap.val() === true) {
+            statusDiv.innerText = "Baza ulandi ✅";
+            statusDiv.className = "status-indicator success";
+        } else {
+            statusDiv.innerText = "Baza ulanmagan ❌";
+            statusDiv.className = "status-indicator error";
+        }
+    });
+
+    function openInstagram() {
+        const instagramAppUrl = "instagram://user?username=abdu_samad_trading"; 
+        const webUrl = "https://www.instagram.com/abdu_samad_trading";
+        window.location.href = instagramAppUrl;
+        setTimeout(() => { if (document.hasFocus()) window.location.href = webUrl; }, 600);
+    }
 
     function login() {
         const name = document.getElementById('userName').value;
         const insta = document.getElementById('userInsta').value;
+        const promo = document.getElementById('promoCode').value;
 
-        if(name && insta) {
-            const userId = btoa(insta); // Oddiy ID yaratish
-            db.ref('users/' + userId).set({
-                name: name,
-                instagram: insta,
-                isPro: false,
-                lastLogin: new Date().toLocaleString()
-            });
+        if(!name || !insta) return alert("Ism va Instani yozing!");
 
-            localStorage.setItem('vipUser', userId);
-            showMain(name);
-        } else {
-            alert("Ma'lumotlarni to'liq kiriting!");
-        }
+        const userId = btoa(insta).replace(/=/g, "");
+        db.ref('users/' + userId).update({
+            name: name,
+            instagram: insta,
+            promo: promo || "Yo'q"
+        }).then(() => {
+            currentUserId = userId;
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('welcomePage').classList.remove('hidden');
+            document.getElementById('welcomeText').innerText = "Salom, " + name + "!";
+        });
     }
 
-    function showMain(name) {
-        document.getElementById('loginPage').classList.add('hidden');
-        document.getElementById('mainPage').classList.remove('hidden');
-        document.getElementById('displayUserName').innerText = name;
+    function goToTools() {
+        document.getElementById('welcomePage').classList.add('hidden');
+        document.getElementById('toolsPage').classList.remove('hidden');
         
-        // Sun'iy AI Analiz
-        setTimeout(() => {
-            document.getElementById('aiResult').innerText = "XAUUSD: Trend Bullish. Liquidity grab kutilmoqda. Smart Money Concept asosida buy qidiring.";
-        }, 1500);
+        db.ref('users/' + currentUserId).on('value', (snap) => {
+            const user = snap.val();
+            if(user && user.isPro) {
+                document.getElementById('lockedSection').classList.add('hidden');
+                document.getElementById('openSection').classList.remove('hidden');
+            } else {
+                document.getElementById('lockedSection').classList.remove('hidden');
+                document.getElementById('openSection').classList.add('hidden');
+            }
+        });
     }
 
     function openAdmin() {
-        const pass = prompt("Admin parolini kiriting:");
-        if(pass === "adminfibo007") {
-            document.getElementById('mainPage').classList.add('hidden');
+        if(prompt("Parol?") === "adminfibo007") {
+            document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('adminPage').classList.remove('hidden');
             loadUsers();
         }
@@ -114,13 +165,25 @@
 
     function loadUsers() {
         db.ref('users').on('value', (snap) => {
-            const tbody = document.querySelector('#userTable tbody');
-            tbody.innerHTML = '';
+            const list = document.getElementById('userList');
+            list.innerHTML = "";
             snap.forEach((child) => {
                 const u = child.val();
-                tbody.innerHTML += `<tr><td>${u.name}</td><td>${u.instagram}</td><td>${u.isPro ? 'PRO' : 'Oddiy'}</td></tr>`;
+                const uid = child.key;
+                list.innerHTML += `
+                    <div style="background:#222; padding:10px; margin-bottom:10px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+                        <div><b>${u.name}</b><br><small>${u.promo}</small></div>
+                        <div>
+                            <button onclick="setStatus('${uid}', true)" style="background:green; color:white; border:none; padding:5px 10px; border-radius:5px;">On</button>
+                            <button onclick="setStatus('${uid}', false)" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px;">Off</button>
+                        </div>
+                    </div>`;
             });
         });
+    }
+
+    function setStatus(uid, status) {
+        db.ref('users/' + uid).update({ isPro: status });
     }
 </script>
 </body>
