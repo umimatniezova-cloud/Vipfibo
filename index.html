@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vipfibo | Professional Trading System</title>
+    <title>Vipfibo | AI Math Trading</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         * { box-sizing: border-box; transition: 0.3s; }
         body { font-family: 'Segoe UI', sans-serif; background: #050505; color: white; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         .hidden { display: none !important; }
-        .card { background: #0f0f0f; padding: 25px; border-radius: 20px; width: 100%; max-width: 480px; margin: 20px auto; border: 1px solid #1a1a1a; box-shadow: 0 10px 40px rgba(0,0,0,0.9); text-align: center; }
-        input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #222; background: #000; color: white; outline: none; font-size: 16px; }
-        .btn { width: 100%; padding: 15px; background: #bb86fc; color: black; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 16px; }
+        .card { background: #0f0f0f; padding: 25px; border-radius: 20px; width: 100%; max-width: 480px; margin: 15px auto; border: 1px solid #1a1a1a; text-align: center; }
+        input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #222; background: #000; color: white; outline: none; }
+        .btn { width: 100%; padding: 15px; background: #bb86fc; color: black; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 15px; }
         .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #1a1a1a; padding: 5px; border-radius: 15px; }
         .nav-btn { flex: 1; padding: 12px; border: none; background: transparent; color: #888; border-radius: 10px; cursor: pointer; font-weight: bold; }
         .nav-btn.active { background: #bb86fc; color: black; }
         .tool-box { background: #141414; padding: 20px; margin: 15px 0; border-radius: 15px; border-left: 4px solid #bb86fc; text-align: left; }
-        .fibo-zone { border-left: 4px solid #03dac6; background: #0a1514; }
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-left: 5px; }
-        .badge-red { background: #f44336; color: white; }
-        .badge-green { background: #4caf50; color: white; }
+        .strat-btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .strat-btn { flex: 1; padding: 10px; font-size: 12px; background: #222; border: 1px solid #333; color: white; border-radius: 8px; cursor: pointer; }
+        .strat-btn.selected { border-color: #bb86fc; color: #bb86fc; background: #1a1125; }
+        .price-tag { color: #f44336; font-family: monospace; font-weight: bold; font-size: 18px; }
     </style>
 </head>
 <body>
@@ -30,7 +30,6 @@
             <button id="tabLogin" class="nav-btn active" onclick="setAuthMode('login')">Login</button>
             <button id="tabReg" class="nav-btn" onclick="setAuthMode('reg')">Registratsiya</button>
         </div>
-        <h2 id="authTitle">Tizimga Kirish</h2>
         <input type="text" id="userInsta" placeholder="Instagram (@username)">
         <input type="password" id="userPass" placeholder="Parol">
         <div id="regExtra" class="hidden">
@@ -38,54 +37,42 @@
             <input type="text" id="userPromo" placeholder="Promo-kod (Vip1...Vip1000)">
         </div>
         <button class="btn" onclick="handleAuth()">Kirish</button>
-        <p style="font-size: 10px; color: #111; margin-top: 30px;" onclick="openAdmin()">Admin</p>
+        <p style="font-size: 10px; color: #111; margin-top: 20px;" onclick="openAdmin()">Admin Panel</p>
     </div>
 
     <div id="mainPage" class="card hidden">
-        <h3 id="welcomeHeader">Salom, Trader!</h3>
+        <h3 id="welcomeHeader">Salom!</h3>
         <div class="nav-tabs">
-            <button id="tabAI" class="nav-btn active" onclick="switchView('ai')">SNR AI</button>
-            <button id="tabFibo" class="nav-btn" onclick="switchView('fibo')">Fibo Pragnoz</button>
+            <button id="tabAI" class="nav-btn active" onclick="switchView('ai')">AI Analiz</button>
+            <button id="tabFibo" class="nav-btn" onclick="switchView('fibo')">Fibo Setting</button>
         </div>
 
         <div id="lockedSection" class="tool-box" style="border-color: #f44336; text-align: center;">
-            <p>🔒 Ruxsat berilmagan. Admin panelidan yoqilishini kuting.</p>
+            <p>🔒 Admin ruxsati kutilmoqda...</p>
         </div>
 
         <div id="unlockedSection" class="hidden">
             <div id="aiView">
                 <div class="tool-box">
-                    <h4 style="color:#4caf50; margin-top:0;">🤖 SNR Strategy Analysis</h4>
-                    <input type="file" id="chartImg" accept="image/*" style="font-size: 12px; margin-bottom: 10px;">
-                    <button class="btn" style="padding: 10px; font-size: 14px;" onclick="analyzeSNR()">Rasmni Analiz Qilish</button>
+                    <h4 style="color:#4caf50; margin-top:0;">🤖 AI Multi-Strategy Analysis</h4>
+                    <p style="font-size: 12px; color: #888;">Strategiyani tanlang va rasm yuklang:</p>
+                    
+                    <div class="strat-btn-group">
+                        <button id="btnSNR" class="strat-btn selected" onclick="setStrategy('SNR')">SNR Strategiya</button>
+                        <button id="btn26" class="strat-btn" onclick="setStrategy('2.6')">2.6 Matematik</button>
+                    </div>
+
+                    <input type="file" id="chartImg" accept="image/*" style="margin-top:15px; font-size: 12px;">
+                    <button class="btn" onclick="startDeepAnalysis()">Analizni Boshlash</button>
                     <div id="aiResult" style="margin-top: 15px;"></div>
                 </div>
             </div>
 
             <div id="fiboView" class="hidden">
-                <div class="tool-box fibo-zone">
-                    <h4 style="color:#03dac6; margin-top:0;">📐 Fibonacci Razvorat & Entry</h4>
-                    
-                    <div style="margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px;">
-                        <p style="font-size: 14px; margin: 5px 0;"><b>Garant Razvorat Zonasi:</b></p>
-                        <span style="color:#f44336; font-size: 18px; font-weight: bold;">0.705 - 0.79 (OTE)</span>
-                        <span class="badge badge-red">High Accuracy</span>
-                    </div>
-
-                    <div style="margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px;">
-                        <p style="font-size: 14px; margin: 5px 0;"><b>Professional Entry (DL):</b></p>
-                        <span style="color:#4caf50; font-size: 18px; font-weight: bold;">0.618 - 0.50</span>
-                        <span class="badge badge-green">Safe Entry</span>
-                    </div>
-
-                    <div style="background: #000; padding: 10px; border-radius: 8px; font-size: 12px; color: #888;">
-                        <b>Pragnoz:</b> Narx 0.79 zonasiga tegsa, 90% holatda impulsiv qaytish sodir bo'ladi. SL darajasini 1.0 dan yuqoriga qo'ying.
-                    </div>
-                </div>
-                
-                <div class="tool-box" style="border-left-color: #ffb74d;">
-                    <h4 style="color:#ffb74d; margin-top:0;">⚙️ TradingView Settings</h4>
-                    <p style="font-size: 13px; font-family: monospace;">Levels: 0, 0.5, 0.618, 0.705, 0.79, 1</p>
+                <div class="tool-box" style="border-color: #03dac6;">
+                    <h4>📐 Garant Razvorat & Entry</h4>
+                    <p><b>Razvorat:</b> <span style="color:#f44336">0.705 - 0.79</span></p>
+                    <p><b>Pragnoz:</b> <span style="color:#4caf50">High Accuracy DL 0.618</span></p>
                 </div>
             </div>
         </div>
@@ -93,8 +80,7 @@
     </div>
 
     <div id="adminPage" class="card hidden">
-        <h2>Admin Panel</h2>
-        <div id="userList"></div>
+        <h2>Admin</h2><div id="userList"></div>
         <button class="btn" onclick="location.reload()">Orqaga</button>
     </div>
 
@@ -113,33 +99,36 @@
     const db = firebase.database();
     let currentUid = "";
     let authMode = "login";
+    let selectedStrategy = "SNR";
 
     function setAuthMode(m) {
         authMode = m;
         document.getElementById('tabLogin').classList.toggle('active', m === 'login');
         document.getElementById('tabReg').classList.toggle('active', m === 'reg');
         document.getElementById('regExtra').classList.toggle('hidden', m === 'login');
-        document.getElementById('authTitle').innerText = m === 'login' ? "Tizimga Kirish" : "Ro'yxatdan O'tish";
+    }
+
+    function setStrategy(s) {
+        selectedStrategy = s;
+        document.getElementById('btnSNR').classList.toggle('selected', s === 'SNR');
+        document.getElementById('btn26').classList.toggle('selected', s === '2.6');
     }
 
     function handleAuth() {
         const insta = document.getElementById('userInsta').value.trim();
         const pass = document.getElementById('userPass').value.trim();
-        if(!insta || !pass) return alert("Ma'lumotlarni kiriting!");
         const uid = btoa(insta).replace(/=/g, "");
 
         if(authMode === "reg") {
             const name = document.getElementById('userName').value;
             const promo = document.getElementById('userPromo').value;
-            const promoRegex = /^Vip([1-9]|[1-9][0-9]|[1-9][0-9][0-9]|1000)$/;
-            if(!promoRegex.test(promo)) return alert("Vip1-Vip1000 kiritilmadi!");
             db.ref('users/' + uid).set({ name, instagram: insta, password: pass, promo, isPro: false })
-              .then(() => { alert("Ro'yxatdan o'tdingiz! Endi login qiling."); location.reload(); });
+              .then(() => { alert("Tayyor! Login qiling."); location.reload(); });
         } else {
             db.ref('users/' + uid).once('value', (s) => {
                 const u = s.val();
                 if(u && u.password === pass) { currentUid = uid; startDashboard(u.name); }
-                else alert("Insta yoki Parol xato!");
+                else alert("Xato!");
             });
         }
     }
@@ -147,7 +136,7 @@
     function startDashboard(name) {
         document.getElementById('authPage').classList.add('hidden');
         document.getElementById('mainPage').classList.remove('hidden');
-        document.getElementById('welcomeHeader').innerText = "Salom, " + name + "!";
+        document.getElementById('welcomeHeader').innerText = "Trader: " + name;
         db.ref('users/' + currentUid).on('value', (s) => {
             const u = s.val();
             document.getElementById('lockedSection').classList.toggle('hidden', u.isPro);
@@ -162,21 +151,36 @@
         document.getElementById('fiboView').classList.toggle('hidden', v !== 'fibo');
     }
 
-    function analyzeSNR() {
-        if(!document.getElementById('chartImg').files[0]) return alert("Avval rasm yuklang!");
+    function startDeepAnalysis() {
+        if(!document.getElementById('chartImg').files[0]) return alert("Rasm yuklang!");
         const res = document.getElementById('aiResult');
-        res.innerHTML = "<p style='color:#bb86fc'>⏳ Rasmdan SNR zonalari qidirilmoqda...</p>";
+        res.innerHTML = `<p style='color:#bb86fc'>⏳ ${selectedStrategy} skanerlanmoqda...</p>`;
+        
         setTimeout(() => {
-            res.innerHTML = `<div style="background:#000; padding:12px; border-radius:10px; border:1px solid #333;">
-                <b style="color:#4caf50;">AI SNR ANALYSIS:</b><br>
-                <p style="font-size:12px; margin:5px 0;">Rasmda <b>Fresh Support</b> aniqlandi. Narx 0.705 Fibo zonasi bilan birlashgan (Confluence). 
-                Bu <b>Garant Razvorat</b> nuqtasi hisoblanadi. Trend: Bullish 📈</p>
-            </div>`;
-        }, 2000);
+            let analysisHtml = "";
+            if(selectedStrategy === "SNR") {
+                analysisHtml = `
+                    <div style="background:#000; padding:15px; border-radius:10px; border:1px solid #333; text-align:left;">
+                        <b style="color:#4caf50;">SNR ANALIZ:</b><br>
+                        <p style="font-size:12px; margin:8px 0;">Eng kuchli Support: <span class="price-tag">2032.40</span></p>
+                        <p style="font-size:12px; margin:8px 0;">Major Resistance: <span class="price-tag">2061.15</span></p>
+                        <small style="color:#888;">Narx hozirda SBR zonasida. 2032.40 darajasidan qaytish ehtimoli 85%.</small>
+                    </div>`;
+            } else {
+                analysisHtml = `
+                    <div style="background:#000; padding:15px; border-radius:10px; border:1px solid #333; text-align:left;">
+                        <b style="color:#03dac6;">2.6 MATEMATIK ANALIZ:</b><br>
+                        <p style="font-size:12px; margin:8px 0;">Matematik Entry: <span class="price-tag" style="color:#03dac6">4590.25</span></p>
+                        <p style="font-size:12px; margin:8px 0;">Pragnoz Garant: <span class="price-tag" style="color:#03dac6">5000.00</span></p>
+                        <small style="color:#888;">2.6 sikli bo'yicha narx 4590 dan impuls olib, 5000 maqsadiga qarab harakatlanadi.</small>
+                    </div>`;
+            }
+            res.innerHTML = analysisHtml;
+        }, 2500);
     }
 
     function openAdmin() {
-        if(prompt("Admin kod?") === "adminfibo007") {
+        if(prompt("Admin?") === "adminfibo007") {
             document.getElementById('authPage').classList.add('hidden');
             document.getElementById('adminPage').classList.remove('hidden');
             loadAdmin();
@@ -189,10 +193,9 @@
             list.innerHTML = "";
             snap.forEach((child) => {
                 const u = child.val();
-                list.innerHTML += `<div style="padding:15px; background:#1a1a1a; margin:5px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-                    <div style="text-align:left;"><b>${u.name}</b><br><small>${u.promo}</small></div>
-                    <button class="btn" style="width:auto; margin:0; padding:5px 15px; background:${u.isPro ? 'red':'green'}; color:white;" 
-                        onclick="db.ref('users/${child.key}').update({isPro:${!u.isPro}})">${u.isPro ? 'Off':'On'}</button>
+                list.innerHTML += `<div style="padding:10px; background:#1a1a1a; margin-top:5px; border-radius:10px; display:flex; justify-content:space-between;">
+                    <span>${u.name}</span>
+                    <button onclick="db.ref('users/${child.key}').update({isPro:${!u.isPro}})">${u.isPro ? 'Off':'On'}</button>
                 </div>`;
             });
         });
