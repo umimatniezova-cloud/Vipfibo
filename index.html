@@ -14,11 +14,12 @@
         .hidden { display: none !important; }
         .card { background: #121212; padding: 30px; border-radius: 20px; width: 100%; max-width: 450px; margin: 20px auto; border: 1px solid #222; box-shadow: 0 15px 35px rgba(0,0,0,0.8); text-align: center; }
         
-        h2 { color: #bb86fc; margin-bottom: 20px; }
-        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #000; color: white; outline: none; }
+        h2 { color: #bb86fc; margin-bottom: 20px; letter-spacing: 1px; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #000; color: white; outline: none; font-size: 16px; }
         input:focus { border-color: #bb86fc; }
         
         .btn { width: 100%; padding: 14px; background: #bb86fc; color: black; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 16px; }
+        .btn:hover { transform: scale(1.02); filter: brightness(1.1); }
         .btn-insta { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: white; margin-bottom: 10px; }
         
         .status-indicator { font-size: 12px; margin-bottom: 10px; font-weight: bold; }
@@ -36,40 +37,40 @@
         <h2>VIPFIBO LOGIN</h2>
         <input type="text" id="userName" placeholder="Ismingiz">
         <input type="text" id="userInsta" placeholder="Instagram (@username)">
-        <input type="text" id="promoCode" placeholder="Promo-kod">
+        <input type="text" id="promoCode" placeholder="Promo-kod (Vip1...Vip1000)">
         
-        <p style="font-size: 13px; color: #888;">Promo-kod olish uchun:</p>
-        <button class="btn btn-insta" onclick="openInstagram()">Instagram App (abdu_samad_trading)</button>
+        <p style="font-size: 13px; color: #888;">Promo-kod olish uchun admin bilan bog'laning:</p>
+        <button class="btn btn-insta" onclick="openInstagram()">Instagram App (_secret_trad)</button>
         <button class="btn" onclick="login()">Kirish</button>
         
-        <p style="font-size: 10px; color: #333; margin-top: 20px;" onclick="openAdmin()">Admin</p>
+        <p style="font-size: 10px; color: #222; margin-top: 30px;" onclick="openAdmin()">Admin Panel</p>
     </div>
 
     <div id="welcomePage" class="card hidden">
         <h3 id="welcomeText">Xush kelibsiz!</h3>
-        <p style="color: #888;">Tizim tayyor.</p>
+        <p style="color: #888;">Tizim muvaffaqiyatli tekshirildi.</p>
         <button class="btn" onclick="goToTools()">Dashboardni ochish</button>
     </div>
 
     <div id="toolsPage" class="card hidden">
-        <h3 style="color: #bb86fc;">Premium Panel</h3>
+        <h3 style="color: #bb86fc;">Premium Dashboard</h3>
         
         <div id="lockedSection">
             <div class="locked-box">
                 <span style="font-size: 50px;">🔒</span>
-                <p>Analiz va Fibo qulflangan.</p>
+                <p>AI Analiz va Fibo qulflangan.</p>
                 <small>Admin panelidan tasdiqlash kutilmoqda...</small>
             </div>
         </div>
 
         <div id="openSection" class="hidden">
             <div class="tool-box">
-                <h4 style="color:#4caf50;">🤖 AI Market Analysis</h4>
-                <p>XAUUSD: OTE zonasi orqali buy kutilmoqda. Trend: Bullish.</p>
+                <h4 style="color:#4caf50; margin-top:0;">🤖 AI Market Analysis</h4>
+                <p style="font-size: 14px;">XAUUSD: Trend Bullish. OTE (Optimal Trade Entry) zonasi orqali buy qidiring.</p>
             </div>
             <div class="tool-box" style="border-color: #03dac6;">
-                <h4 style="color:#03dac6;">📐 Fibo Premium</h4>
-                <p style="font-weight: bold; letter-spacing: 2px;">0.62 | 0.705 | 0.79</p>
+                <h4 style="color:#03dac6; margin-top:0;">📐 Fibo Nastroyka (OTE)</h4>
+                <p style="font-weight: bold; font-size: 18px; letter-spacing: 2px;">0.62 | 0.705 | 0.79</p>
             </div>
         </div>
 
@@ -77,13 +78,13 @@
     </div>
 
     <div id="adminPage" class="card hidden" style="max-width: 600px;">
-        <h2>Admin Panel</h2>
+        <h2 style="color: #ffb74d;">Foydalanuvchilar Nazorati</h2>
         <div id="userList" style="text-align: left;"></div>
         <button class="btn" onclick="location.reload()">Orqaga</button>
     </div>
 
 <script>
-    // Skrinshotingizdagi aniq konfiglar
+    // Firebase Konfiguratsiyasi (Sizning kalitlaringiz)
     const firebaseConfig = {
         apiKey: "AIzaSyAFGJtXKgL8a1AjYK1w9ft7hI4",
         authDomain: "vipfibo-cf608.firebaseapp.com",
@@ -94,14 +95,14 @@
         appId: "1:73178155867:web:1cfc3757d2d09668102462"
     };
 
-    // Firebase'ni ishga tushirish
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.database();
     const statusDiv = document.getElementById('dbStatus');
+    let currentUserId = "";
 
-    // Ulanishni tekshirish
+    // Baza ulanishini tekshirish
     db.ref('.info/connected').on('value', (snap) => {
         if (snap.val() === true) {
             statusDiv.innerText = "Baza ulandi ✅";
@@ -112,25 +113,34 @@
         }
     });
 
+    // Instagramga o'tish (_secret_trad)
     function openInstagram() {
-        const instagramAppUrl = "instagram://user?username=abdu_samad_trading"; 
-        const webUrl = "https://www.instagram.com/abdu_samad_trading";
+        const instagramAppUrl = "instagram://user?username=_secret_trad"; 
+        const webUrl = "https://www.instagram.com/_secret_trad";
         window.location.href = instagramAppUrl;
         setTimeout(() => { if (document.hasFocus()) window.location.href = webUrl; }, 600);
     }
 
+    // Login va Promo-kod tekshiruvi (Vip1 - Vip1000)
     function login() {
         const name = document.getElementById('userName').value;
         const insta = document.getElementById('userInsta').value;
         const promo = document.getElementById('promoCode').value;
 
-        if(!name || !insta) return alert("Ism va Instani yozing!");
+        if(!name || !insta) return alert("Ism va Instagramni yozing!");
+
+        // Promo-kod formati: Vip1 dan Vip1000 gacha
+        const promoRegex = /^Vip([1-9]|[1-9][0-9]|[1-9][0-9][0-9]|1000)$/;
+        if (!promoRegex.test(promo)) {
+            return alert("Xato! Faqat Vip1 dan Vip1000 gacha bo'lgan promo-kodlarni kiriting.");
+        }
 
         const userId = btoa(insta).replace(/=/g, "");
         db.ref('users/' + userId).update({
             name: name,
             instagram: insta,
-            promo: promo || "Yo'q"
+            promo: promo,
+            isPro: false // Dastlab yopiq holatda bo'ladi
         }).then(() => {
             currentUserId = userId;
             document.getElementById('loginPage').classList.add('hidden');
@@ -139,10 +149,12 @@
         });
     }
 
+    // Dashboardga o'tish
     function goToTools() {
         document.getElementById('welcomePage').classList.add('hidden');
         document.getElementById('toolsPage').classList.remove('hidden');
         
+        // Real-time tekshirish: Admin ruxsat berishi bilan ochiladi
         db.ref('users/' + currentUserId).on('value', (snap) => {
             const user = snap.val();
             if(user && user.isPro) {
@@ -155,8 +167,10 @@
         });
     }
 
+    // Admin Panel (Faqat aka uchun)
     function openAdmin() {
-        if(prompt("Parol?") === "adminfibo007") {
+        const pass = prompt("Admin parolini kiriting:");
+        if(pass === "adminfibo007") {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('adminPage').classList.remove('hidden');
             loadUsers();
@@ -171,11 +185,15 @@
                 const u = child.val();
                 const uid = child.key;
                 list.innerHTML += `
-                    <div style="background:#222; padding:10px; margin-bottom:10px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-                        <div><b>${u.name}</b><br><small>${u.promo}</small></div>
+                    <div style="background:#222; padding:15px; margin-bottom:10px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="text-align:left;">
+                            <b style="color:#bb86fc;">${u.name}</b><br>
+                            <small style="color:#888;">${u.instagram}</small><br>
+                            <small style="color:#4caf50;">Promo: ${u.promo}</small>
+                        </div>
                         <div>
-                            <button onclick="setStatus('${uid}', true)" style="background:green; color:white; border:none; padding:5px 10px; border-radius:5px;">On</button>
-                            <button onclick="setStatus('${uid}', false)" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px;">Off</button>
+                            <button onclick="setStatus('${uid}', true)" style="background:green; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; font-weight:bold;">Yoqish</button>
+                            <button onclick="setStatus('${uid}', false)" style="background:red; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; font-weight:bold; margin-left:5px;">O'chirish</button>
                         </div>
                     </div>`;
             });
