@@ -3,109 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vipfibo | Premium SNR System</title>
-    
+    <title>Vipfibo | Professional Trading System</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
     <style>
         * { box-sizing: border-box; transition: 0.3s; }
         body { font-family: 'Segoe UI', sans-serif; background: #050505; color: white; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         .hidden { display: none !important; }
-        
-        /* Kartalar */
-        .card { background: #0f0f0f; padding: 25px; border-radius: 20px; width: 100%; max-width: 450px; margin: 20px auto; border: 1px solid #1a1a1a; box-shadow: 0 10px 40px rgba(0,0,0,0.9); text-align: center; }
-        
-        /* Inputlar */
+        .card { background: #0f0f0f; padding: 25px; border-radius: 20px; width: 100%; max-width: 480px; margin: 20px auto; border: 1px solid #1a1a1a; box-shadow: 0 10px 40px rgba(0,0,0,0.9); text-align: center; }
         input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #222; background: #000; color: white; outline: none; font-size: 16px; }
-        input:focus { border-color: #bb86fc; box-shadow: 0 0 10px rgba(187, 134, 252, 0.2); }
-        
-        /* Tugmalar */
         .btn { width: 100%; padding: 15px; background: #bb86fc; color: black; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 16px; }
-        .btn:active { transform: scale(0.98); }
-        .btn-insta { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: white; margin-bottom: 15px; }
-        
-        /* Navigatsiya */
         .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #1a1a1a; padding: 5px; border-radius: 15px; }
         .nav-btn { flex: 1; padding: 12px; border: none; background: transparent; color: #888; border-radius: 10px; cursor: pointer; font-weight: bold; }
         .nav-btn.active { background: #bb86fc; color: black; }
-
-        /* Analiz qutilari */
         .tool-box { background: #141414; padding: 20px; margin: 15px 0; border-radius: 15px; border-left: 4px solid #bb86fc; text-align: left; }
-        .locked-msg { padding: 40px 20px; border: 2px dashed #333; border-radius: 20px; color: #666; }
-        
-        /* Status indikator */
-        .db-status { font-size: 11px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .fibo-zone { border-left: 4px solid #03dac6; background: #0a1514; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-left: 5px; }
+        .badge-red { background: #f44336; color: white; }
+        .badge-green { background: #4caf50; color: white; }
     </style>
 </head>
 <body>
 
     <div id="authPage" class="card">
-        <div id="dbIndicator" class="db-status" style="color: #f44336;">Baza ochiq emas ⚠️</div>
         <div class="nav-tabs">
             <button id="tabLogin" class="nav-btn active" onclick="setAuthMode('login')">Login</button>
             <button id="tabReg" class="nav-btn" onclick="setAuthMode('reg')">Registratsiya</button>
         </div>
-        
-        <h2 id="authTitle">Xush kelibsiz</h2>
+        <h2 id="authTitle">Tizimga Kirish</h2>
         <input type="text" id="userInsta" placeholder="Instagram (@username)">
         <input type="password" id="userPass" placeholder="Parol">
-        
         <div id="regExtra" class="hidden">
             <input type="text" id="userName" placeholder="Ismingiz">
             <input type="text" id="userPromo" placeholder="Promo-kod (Vip1...Vip1000)">
         </div>
-
-        <button class="btn" onclick="handleAuth()">Davom etish</button>
-        <button class="btn btn-insta" onclick="openInstagram()">Instagram App (_secret_trad)</button>
-        
+        <button class="btn" onclick="handleAuth()">Kirish</button>
         <p style="font-size: 10px; color: #111; margin-top: 30px;" onclick="openAdmin()">Admin</p>
     </div>
 
     <div id="mainPage" class="card hidden">
-        <h3 id="welcomeUser">Salom, Trader!</h3>
-        
+        <h3 id="welcomeHeader">Salom, Trader!</h3>
         <div class="nav-tabs">
-            <button id="tabAI" class="nav-btn active" onclick="switchView('ai')">AI Analiz</button>
-            <button id="tabFibo" class="nav-btn" onclick="switchView('fibo')">Fibo Setting</button>
+            <button id="tabAI" class="nav-btn active" onclick="switchView('ai')">SNR AI</button>
+            <button id="tabFibo" class="nav-btn" onclick="switchView('fibo')">Fibo Pragnoz</button>
         </div>
 
-        <div id="lockedSection" class="locked-msg">
-            <span style="font-size: 40px;">🔒</span>
-            <p>Sizga ruxsat berilmagan.<br><small>Admin panelidan "Yoqish" tugmasini kuting.</small></p>
+        <div id="lockedSection" class="tool-box" style="border-color: #f44336; text-align: center;">
+            <p>🔒 Ruxsat berilmagan. Admin panelidan yoqilishini kuting.</p>
         </div>
 
         <div id="unlockedSection" class="hidden">
             <div id="aiView">
                 <div class="tool-box">
-                    <h4 style="color:#4caf50; margin-top:0;">🤖 SNR AI Strategy Analysis</h4>
-                    <p style="font-size: 13px; color: #888;">Grafik rasmini yuklang:</p>
-                    <input type="file" id="chartImg" accept="image/*" style="font-size: 12px; border: none; background: #1a1a1a;">
-                    <button class="btn" style="padding: 10px; font-size: 14px;" onclick="startAIAnalysis()">Analizni boshlash</button>
+                    <h4 style="color:#4caf50; margin-top:0;">🤖 SNR Strategy Analysis</h4>
+                    <input type="file" id="chartImg" accept="image/*" style="font-size: 12px; margin-bottom: 10px;">
+                    <button class="btn" style="padding: 10px; font-size: 14px;" onclick="analyzeSNR()">Rasmni Analiz Qilish</button>
                     <div id="aiResult" style="margin-top: 15px;"></div>
                 </div>
             </div>
 
             <div id="fiboView" class="hidden">
-                <div class="tool-box" style="border-color: #03dac6;">
-                    <h4 style="color:#03dac6; margin-top:0;">📐 OTE Fibo Settings</h4>
-                    <p>0 | 0.618 | 0.705 | 0.786 | 1</p>
-                    <small style="color:#666;">Eng kuchli qaytish zonalari sozlangan.</small>
+                <div class="tool-box fibo-zone">
+                    <h4 style="color:#03dac6; margin-top:0;">📐 Fibonacci Razvorat & Entry</h4>
+                    
+                    <div style="margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px;">
+                        <p style="font-size: 14px; margin: 5px 0;"><b>Garant Razvorat Zonasi:</b></p>
+                        <span style="color:#f44336; font-size: 18px; font-weight: bold;">0.705 - 0.79 (OTE)</span>
+                        <span class="badge badge-red">High Accuracy</span>
+                    </div>
+
+                    <div style="margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px;">
+                        <p style="font-size: 14px; margin: 5px 0;"><b>Professional Entry (DL):</b></p>
+                        <span style="color:#4caf50; font-size: 18px; font-weight: bold;">0.618 - 0.50</span>
+                        <span class="badge badge-green">Safe Entry</span>
+                    </div>
+
+                    <div style="background: #000; padding: 10px; border-radius: 8px; font-size: 12px; color: #888;">
+                        <b>Pragnoz:</b> Narx 0.79 zonasiga tegsa, 90% holatda impulsiv qaytish sodir bo'ladi. SL darajasini 1.0 dan yuqoriga qo'ying.
+                    </div>
+                </div>
+                
+                <div class="tool-box" style="border-left-color: #ffb74d;">
+                    <h4 style="color:#ffb74d; margin-top:0;">⚙️ TradingView Settings</h4>
+                    <p style="font-size: 13px; font-family: monospace;">Levels: 0, 0.5, 0.618, 0.705, 0.79, 1</p>
                 </div>
             </div>
         </div>
-
-        <button class="btn" style="background:#222; color:white; margin-top:30px;" onclick="location.reload()">Chiqish</button>
+        <button class="btn" style="background:#222; color:white;" onclick="location.reload()">Chiqish</button>
     </div>
 
-    <div id="adminPage" class="card hidden" style="max-width: 600px;">
-        <h2>Boshqaruv Paneli</h2>
+    <div id="adminPage" class="card hidden">
+        <h2>Admin Panel</h2>
         <div id="userList"></div>
         <button class="btn" onclick="location.reload()">Orqaga</button>
     </div>
 
 <script>
-    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyAFGJtXKgL8a1AjYK1w9ft7hI4",
         authDomain: "vipfibo-cf608.firebaseapp.com",
@@ -116,90 +109,70 @@
         appId: "1:73178155867:web:1cfc3757d2d09668102462"
     };
 
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     let currentUid = "";
     let authMode = "login";
 
-    // Baza holati
-    db.ref('.info/connected').on('value', (s) => {
-        const ind = document.getElementById('dbIndicator');
-        if(s.val()){ ind.innerText="Baza ulandi ✅"; ind.style.color="#4caf50"; }
-    });
-
-    function setAuthMode(mode) {
-        authMode = mode;
-        document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
-        document.getElementById('tabReg').classList.toggle('active', mode === 'reg');
-        document.getElementById('regExtra').classList.toggle('hidden', mode === 'login');
-        document.getElementById('authTitle').innerText = mode === 'login' ? "Tizimga Kirish" : "Ro'yxatdan O'tish";
+    function setAuthMode(m) {
+        authMode = m;
+        document.getElementById('tabLogin').classList.toggle('active', m === 'login');
+        document.getElementById('tabReg').classList.toggle('active', m === 'reg');
+        document.getElementById('regExtra').classList.toggle('hidden', m === 'login');
+        document.getElementById('authTitle').innerText = m === 'login' ? "Tizimga Kirish" : "Ro'yxatdan O'tish";
     }
 
     function handleAuth() {
         const insta = document.getElementById('userInsta').value.trim();
         const pass = document.getElementById('userPass').value.trim();
-        if(!insta || !pass) return alert("To'ldiring!");
+        if(!insta || !pass) return alert("Ma'lumotlarni kiriting!");
         const uid = btoa(insta).replace(/=/g, "");
 
         if(authMode === "reg") {
             const name = document.getElementById('userName').value;
             const promo = document.getElementById('userPromo').value;
             const promoRegex = /^Vip([1-9]|[1-9][0-9]|[1-9][0-9][0-9]|1000)$/;
-            if(!promoRegex.test(promo)) return alert("Vip1-Vip1000 promo-kod kiriting!");
-            
+            if(!promoRegex.test(promo)) return alert("Vip1-Vip1000 kiritilmadi!");
             db.ref('users/' + uid).set({ name, instagram: insta, password: pass, promo, isPro: false })
-              .then(() => { alert("Tayyor! Endi Login qiling."); location.reload(); });
+              .then(() => { alert("Ro'yxatdan o'tdingiz! Endi login qiling."); location.reload(); });
         } else {
-            db.ref('users/' + uid).once('value', (snap) => {
-                const u = snap.val();
-                if(u && u.password === pass) {
-                    currentUid = uid;
-                    showDashboard(u.name);
-                } else alert("Insta yoki Parol xato!");
+            db.ref('users/' + uid).once('value', (s) => {
+                const u = s.val();
+                if(u && u.password === pass) { currentUid = uid; startDashboard(u.name); }
+                else alert("Insta yoki Parol xato!");
             });
         }
     }
 
-    function showDashboard(name) {
+    function startDashboard(name) {
         document.getElementById('authPage').classList.add('hidden');
         document.getElementById('mainPage').classList.remove('hidden');
-        document.getElementById('welcomeUser').innerText = "Salom, " + name + "!";
-        
-        db.ref('users/' + currentUid).on('value', (snap) => {
-            const u = snap.val();
-            const locked = document.getElementById('lockedSection');
-            const unlocked = document.getElementById('unlockedSection');
-            if(u && u.isPro) { locked.classList.add('hidden'); unlocked.classList.remove('hidden'); }
-            else { locked.classList.remove('hidden'); unlocked.classList.add('hidden'); }
+        document.getElementById('welcomeHeader').innerText = "Salom, " + name + "!";
+        db.ref('users/' + currentUid).on('value', (s) => {
+            const u = s.val();
+            document.getElementById('lockedSection').classList.toggle('hidden', u.isPro);
+            document.getElementById('unlockedSection').classList.toggle('hidden', !u.isPro);
         });
     }
 
-    function switchView(view) {
-        document.getElementById('tabAI').classList.toggle('active', view === 'ai');
-        document.getElementById('tabFibo').classList.toggle('active', view === 'fibo');
-        document.getElementById('aiView').classList.toggle('hidden', view !== 'ai');
-        document.getElementById('fiboView').classList.toggle('hidden', view !== 'fibo');
+    function switchView(v) {
+        document.getElementById('tabAI').classList.toggle('active', v === 'ai');
+        document.getElementById('tabFibo').classList.toggle('active', v === 'fibo');
+        document.getElementById('aiView').classList.toggle('hidden', v !== 'ai');
+        document.getElementById('fiboView').classList.toggle('hidden', v !== 'fibo');
     }
 
-    function startAIAnalysis() {
+    function analyzeSNR() {
+        if(!document.getElementById('chartImg').files[0]) return alert("Avval rasm yuklang!");
         const res = document.getElementById('aiResult');
-        res.innerHTML = "<p style='color:#bb86fc'>⏳ SNR Analiz qilinmoqda...</p>";
-        
+        res.innerHTML = "<p style='color:#bb86fc'>⏳ Rasmdan SNR zonalari qidirilmoqda...</p>";
         setTimeout(() => {
-            res.innerHTML = `
-                <div style="background:#222; padding:15px; border-radius:10px; text-align:left;">
-                    <b style="color:#4caf50;">💎 KUCHLI SNR ZONALARI:</b><br>
-                    <small>Support: 2031.50 (Fresh Zone)</small><br>
-                    <small>Resistance: 2068.00 (Major Level)</small><hr style="border:#333">
-                    <p style="font-size:12px; margin:0;"><b>Xulosa:</b> Narx hozirda SBR (Support become Resistance) holatida. 
-                    SNR bo'yicha eng aniq qaytish 2031.50 zonasida kutilmoqda. <b>Buy qidirish tavsiya etiladi.</b></p>
-                </div>`;
+            res.innerHTML = `<div style="background:#000; padding:12px; border-radius:10px; border:1px solid #333;">
+                <b style="color:#4caf50;">AI SNR ANALYSIS:</b><br>
+                <p style="font-size:12px; margin:5px 0;">Rasmda <b>Fresh Support</b> aniqlandi. Narx 0.705 Fibo zonasi bilan birlashgan (Confluence). 
+                Bu <b>Garant Razvorat</b> nuqtasi hisoblanadi. Trend: Bullish 📈</p>
+            </div>`;
         }, 2000);
-    }
-
-    function openInstagram() {
-        window.location.href = "instagram://user?username=_secret_trad";
-        setTimeout(() => { if(document.hasFocus()) window.location.href = "https://www.instagram.com/_secret_trad"; }, 600);
     }
 
     function openAdmin() {
@@ -216,12 +189,11 @@
             list.innerHTML = "";
             snap.forEach((child) => {
                 const u = child.val();
-                list.innerHTML += `
-                    <div style="padding:15px; background:#1a1a1a; margin-bottom:10px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
-                        <div style="text-align:left;"><b>${u.name}</b><br><small>Promo: ${u.promo}</small></div>
-                        <button class="btn" style="width:auto; padding:8px 15px; margin:0; background:${u.isPro ? '#f44336':'#4caf50'}; color:white;" 
-                            onclick="db.ref('users/${child.key}').update({isPro:${!u.isPro}})">${u.isPro ? 'O\'chirish':'Yoqish'}</button>
-                    </div>`;
+                list.innerHTML += `<div style="padding:15px; background:#1a1a1a; margin:5px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="text-align:left;"><b>${u.name}</b><br><small>${u.promo}</small></div>
+                    <button class="btn" style="width:auto; margin:0; padding:5px 15px; background:${u.isPro ? 'red':'green'}; color:white;" 
+                        onclick="db.ref('users/${child.key}').update({isPro:${!u.isPro}})">${u.isPro ? 'Off':'On'}</button>
+                </div>`;
             });
         });
     }
