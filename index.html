@@ -3,97 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vipfibo | AI Math Trading</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <title>Smart Liquidity Calculator</title>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: sans-serif; background: #050505; color: white; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .card { background: #0f0f0f; padding: 25px; border-radius: 24px; width: 100%; max-width: 450px; border: 1px solid #1a1a1a; text-align: center; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn { width: 100%; padding: 15px; background: #bb86fc; color: black; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 16px; }
-        .tool-box { background: #141414; padding: 20px; border-radius: 18px; border-left: 4px solid #bb86fc; text-align: left; margin: 15px 0; }
-        select, input[type="file"] { width: 100%; padding: 12px; margin-top: 10px; background: #000; color: white; border: 1px solid #333; border-radius: 10px; }
-        .loader { border: 3px solid #1a1a1a; border-top: 3px solid #bb86fc; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 15px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #aiResult { margin-top: 15px; font-size: 14px; line-height: 1.6; }
-        .error-box { background: rgba(244, 67, 54, 0.1); color: #f44336; padding: 15px; border-radius: 12px; border: 1px solid #f44336; margin-top: 10px; font-size: 13px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121214;
+            color: #e1e1e6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: #1a1a1e;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            max-width: 450px;
+            width: 100%;
+        }
+        h2 {
+            text-align: center;
+            color: #00b4d8;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #a9a9b3;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #29292e;
+            background-color: #202024;
+            color: #fff;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #00b4d8;
+            border: none;
+            border-radius: 6px;
+            color: #121214;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #90e0ef;
+        }
+        .result-section {
+            margin-top: 25px;
+            display: none;
+        }
+        .zone-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .zone-table th, .zone-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #29292e;
+        }
+        .buy-row { background-color: rgba(0, 180, 216, 0.1); color: #00b4d8; font-weight: bold; }
+        .sell-row { background-color: rgba(230, 57, 70, 0.1); color: #e63946; font-weight: bold; }
+        .range-info { text-align: center; font-size: 14px; color: #8d8d99; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h3 style="margin-bottom: 20px; color: #bb86fc;">Trader: Ozod</h3>
-        <div class="tool-box">
-            <h4 style="margin:0; color: #03dac6;">🤖 AI Vision Analiz</h4>
-            
-            <p style="font-size: 12px; color: #888; margin-top: 15px; margin-bottom: 5px;">Strategiyani tanlang:</p>
-            <select id="stratSelect">
-                <option value="2.6 Matematik">2.6 Matematik Strategiya</option>
-                <option value="SNR Strategiya">SNR (Support/Resistance)</option>
-            </select>
-
-            <p style="font-size: 12px; color: #888; margin-top: 15px; margin-bottom: 5px;">Grafik skrinshotini yuklang:</p>
-            <input type="file" id="chartImg" accept="image/*">
-
-            <button class="btn" onclick="runAI()">Analizni Boshlash</button>
-            <div id="aiResult"></div>
-        </div>
-        <button class="btn" style="background: #222; color: white; margin-top: 10px;" onclick="location.reload()">Chiqish</button>
+<div class="container">
+    <h2>Liquidity Level Calc</h2>
+    
+    <div class="input-group">
+        <label for="high">High (Максимал) narx:</label>
+        <input type="number" id="high" step="any" placeholder="Masalan: 4351.628">
     </div>
+    
+    <div class="input-group">
+        <label for="low">Low (Минимал) narx:</label>
+        <input type="number" id="low" step="any" placeholder="Masalan: 4321.090">
+    </div>
+    
+    <button onclick="calculateZones()">Zonalarni Hisoblash</button>
+    
+    <div class="result-section" id="results">
+        <div class="range-info" id="range-text"></div>
+        <table class="zone-table">
+            <thead>
+                <tr>
+                    <th>Zona</th>
+                    <th>Foiz</th>
+                    <th>Kalit Narx</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="sell-row">
+                    <td>Сел зона</td>
+                    <td>90%</td>
+                    <td id="sell90">-</td>
+                </tr>
+                <tr class="sell-row">
+                    <td>Сел зона</td>
+                    <td>70%</td>
+                    <td id="sell70">-</td>
+                </tr>
+                <tr class="buy-row">
+                    <td>Бай зона</td>
+                    <td>70%</td>
+                    <td id="buy70">-</td>
+                </tr>
+                <tr class="buy-row">
+                    <td>Бай зона</td>
+                    <td>90%</td>
+                    <td id="buy90">-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <script>
-    // 1. API Key o'rnatildi
-    const API_KEY = "AIzaSyDWmZbEE6uW3nZbqeC7LQVd7pLxvuhBLhI"; 
-
-    async function runAI() {
-        const fileInput = document.getElementById('chartImg');
-        const res = document.getElementById('aiResult');
-        const strat = document.getElementById('stratSelect').value;
-
-        if (!fileInput.files[0]) return alert("Iltimos, rasm yuklang!");
-
-        res.innerHTML = `<div class="loader"></div><p style="text-align:center; color: #bb86fc;">AI rasmni tahlil qilmoqda...</p>`;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(fileInput.files[0]);
-        reader.onload = async () => {
-            const base64Data = reader.result.split(',')[1];
-            
-            // AI uchun topshiriq
-            const prompt = `Sen trading ekspertisan. Ushbu grafikni ${strat} bo'yicha tahlil qil. Rasmdagi narx ko'rsatkichlarini o'qi. 2.6 bo'lsa, kirish va targetni aniq raqamlarda ko'rsat.`;
-
-            try {
-                // YANGILANGAN API MANZILI (URL)
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [
-                                { text: prompt },
-                                { inline_data: { mime_type: "image/jpeg", data: base64Data } }
-                            ]
-                        }]
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.error) {
-                    res.innerHTML = `<div class="error-box"><b>Google Xatosi:</b><br>${data.error.message}</div>`;
-                } else if (data.candidates && data.candidates[0]) {
-                    const text = data.candidates[0].content.parts[0].text;
-                    res.innerHTML = `<div style="background:#000; padding:15px; border:1px solid #333; border-radius:12px; text-align: left; white-space: pre-wrap;">${text}</div>`;
-                } else {
-                    res.innerHTML = `<div class="error-box">AI tahlil qila olmadi. Rasmda narxlar ko'rinayotganini tekshiring.</div>`;
-                }
-            } catch (e) {
-                res.innerHTML = `<div class="error-box">Tarmoq xatosi! VPN ishlayotganini tekshiring.</div>`;
-            }
-        };
+function calculateZones() {
+    const high = parseFloat(document.getElementById('high').value);
+    const low = parseFloat(document.getElementById('low').value);
+    
+    if (isNaN(high) || !high || isNaN(low) || !low) {
+        alert("Iltimos, High va Low narxlarini to'g'ri kiriting!");
+        return;
     }
+    
+    const range = high - low;
+    
+    // Algoritm bo'yicha hisob-kitob (Multiplikatorlar: 0.3846 va 0.7692)
+    const b70 = low - (range * 0.3846);
+    const b90 = low - (range * 0.7692);
+    const s70 = high + (range * 0.3846);
+    const s90 = high + (range * 0.7692);
+    
+    // Natijalarni ekranga chiqarish (to'rtta kasr aniqligida)
+    document.getElementById('range-text').innerText = `Joriy diapazon (Range): ${range.toFixed(3)} punkt`;
+    document.getElementById('buy70').innerText = b70.toFixed(3);
+    document.getElementById('buy90').innerText = b90.toFixed(3);
+    document.getElementById('sell70').innerText = s70.toFixed(3);
+    document.getElementById('sell90').innerText = s90.toFixed(3);
+    
+    document.getElementById('results').style.display = 'block';
+}
 </script>
+
 </body>
 </html>
